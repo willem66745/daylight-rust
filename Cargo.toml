@@ -1,0 +1,7 @@
+[package]
+name = "daylight"
+version = "0.0.1"
+authors = ["Willem <willem66745@gmail.com>"]
+
+[dependencies]
+time = "*"
