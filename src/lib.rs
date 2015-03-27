@@ -15,6 +15,7 @@ extern crate time;
 use time::{Timespec, Tm};
 use std::num::Float;
 use std::f64::consts;
+use std::time::Duration;
 
 const SUNRADIUS: f64 = 0.53;
 const AIRREFR: f64 = 34.0/60.0;
@@ -32,6 +33,7 @@ pub struct Daylight {
     pub sunset: Timespec,
     pub twilight_evening: Timespec,
     pub noon: Timespec,
+    pub daylength: Duration,
 }
 
 /// the function below returns an angle in the range 0 to 2*pi
@@ -138,7 +140,8 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
               sunrise: daylight_hours_to_timespec(tsmidnight, riset),
               sunset: daylight_hours_to_timespec(tsmidnight, settm),
               twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm),
-              noon: daylight_hours_to_timespec(tsmidnight, noon)}
+              noon: daylight_hours_to_timespec(tsmidnight, noon),
+              daylength: Duration::seconds((halfday * SECS_IN_HOUR * 2.0) as i64)}
 }
 
 #[test]
@@ -179,6 +182,7 @@ fn daylight_tokyo_20150327_1200_utc() {
     assert_eq!(daylight.noon.sec, 1427424460);
     assert_eq!(daylight.sunset.sec, 1427446677);
     assert_eq!(daylight.twilight_evening.sec, 1427447573);
+    assert_eq!(daylight.daylength.num_seconds(), 44433);
 }
 
 #[test]
@@ -195,6 +199,7 @@ fn daylight_avarua_20150327_1200_utc() {
     assert_eq!(daylight.noon.sec, 1427496189);
     assert_eq!(daylight.sunset.sec, 1427517608);
     assert_eq!(daylight.twilight_evening.sec, 1427518088);
+    assert_eq!(daylight.daylength.num_seconds(), 42839);
 }
 
 #[test]
@@ -212,6 +217,7 @@ fn daylight_longyearbyen_20150621_1200_utc_midsummer() {
     assert_eq!(daylight.noon.sec, 1434884354);
     assert_eq!(daylight.sunset.sec, 1434927554);
     assert_eq!(daylight.twilight_evening.sec, 1434927554);
+    assert_eq!(daylight.daylength.num_seconds(), 86400);
 }
 
 #[test]
@@ -229,6 +235,7 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
     assert_eq!(daylight.noon.sec, 1450695334);
     assert_eq!(daylight.sunset.sec, 1450695334);
     assert_eq!(daylight.twilight_evening.sec, 1450695334);
+    assert_eq!(daylight.daylength.num_seconds(), 0);
 }
 
 #[test]
