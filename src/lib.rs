@@ -33,6 +33,7 @@ pub struct Daylight {
     pub sunset: Timespec,
     pub twilight_evening: Timespec,
     pub noon: Timespec,
+    pub declination: f64,
     pub daylength: Duration,
 }
 
@@ -141,6 +142,7 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
               sunset: daylight_hours_to_timespec(tsmidnight, settm),
               twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm),
               noon: daylight_hours_to_timespec(tsmidnight, noon),
+              declination: delta.to_degrees(),
               daylength: Duration::seconds((halfday * SECS_IN_HOUR * 2.0) as i64)}
 }
 
@@ -166,6 +168,9 @@ fn daylight_apeldoorn_20150327_1200_utc() {
     assert_eq!(daylight.noon.sec, 1427456487);
     assert_eq!(daylight.sunset.sec, 1427479207); // 2015-03-27T19:00:07+01:00
     assert_eq!(daylight.twilight_evening.sec, 1427480844); // 2015-03-27T19:27:24+01:00
+    assert_eq!(daylight.daylength.num_seconds(), 45440);
+    assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
+        "declination != {}", daylight.declination);
 }
 
 #[test]
@@ -183,6 +188,8 @@ fn daylight_tokyo_20150327_1200_utc() {
     assert_eq!(daylight.sunset.sec, 1427446677);
     assert_eq!(daylight.twilight_evening.sec, 1427447573);
     assert_eq!(daylight.daylength.num_seconds(), 44433);
+    assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
+        "declination != {}", daylight.declination);
 }
 
 #[test]
@@ -200,6 +207,8 @@ fn daylight_avarua_20150327_1200_utc() {
     assert_eq!(daylight.sunset.sec, 1427517608);
     assert_eq!(daylight.twilight_evening.sec, 1427518088);
     assert_eq!(daylight.daylength.num_seconds(), 42839);
+    assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
+        "declination != {}", daylight.declination);
 }
 
 #[test]
@@ -218,6 +227,8 @@ fn daylight_longyearbyen_20150621_1200_utc_midsummer() {
     assert_eq!(daylight.sunset.sec, 1434927554);
     assert_eq!(daylight.twilight_evening.sec, 1434927554);
     assert_eq!(daylight.daylength.num_seconds(), 86400);
+    assert!(daylight.declination > 23.436411 && daylight.declination < 23.436413,
+        "declination != {}", daylight.declination);
 }
 
 #[test]
@@ -236,6 +247,8 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
     assert_eq!(daylight.sunset.sec, 1450695334);
     assert_eq!(daylight.twilight_evening.sec, 1450695334);
     assert_eq!(daylight.daylength.num_seconds(), 0);
+    assert!(daylight.declination > -23.43652 && daylight.declination < -23.43650,
+        "declination != {}", daylight.declination);
 }
 
 #[test]
