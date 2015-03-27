@@ -20,6 +20,9 @@ const SUNRADIUS: f64 = 0.53;
 const AIRREFR: f64 = 34.0/60.0;
 const Y2000: Tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 1, tm_mon: 0, tm_year: 100,
                       tm_wday: 6, tm_yday: 0, tm_isdst: 0, tm_utcoff: 0, tm_nsec: 0};
+const SECS_IN_HOUR: f64 = 3600.0;
+const HOURS_IN_DAY: f64 = 24.0;
+const FRAC_HOURS_IN_DAY_2: f64 = 12.0;
 
 /// Result of the daylight calculation (calculated times are UTC based)
 #[derive(Clone, Copy, Debug)]
@@ -76,13 +79,13 @@ fn fnsun(d: f64) -> (f64, f64) {
 fn days_since_2000(date: Tm) -> f64 {
     let duration = date - Y2000;
 
-    duration.num_seconds() as f64 / (24.0 * 3600.0)
+    duration.num_seconds() as f64 / (HOURS_IN_DAY * SECS_IN_HOUR)
 }
 
 /// Converts daylight hours to Timespec
 fn daylight_hours_to_timespec(midnight: Timespec, hours: f64) -> Timespec {
     Timespec {
-        sec: midnight.sec + (hours * 3600.0) as i64,
+        sec: midnight.sec + (hours * SECS_IN_HOUR) as i64,
         nsec: 0
     }
 }
@@ -109,15 +112,15 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let mean_longitude_corr2 = if mean_longitude_corr < consts::PI {
         mean_longitude_corr + consts::PI_2} else {
             mean_longitude_corr};
-    let equation = 1440.0 * (1.0 - mean_longitude_corr2 / consts::PI/2.0);
+    let equation = HOURS_IN_DAY * (1.0 - mean_longitude_corr2 / consts::PI_2);
     let ha = f0(latitude, delta);
     let hb = f1(latitude, delta);
     let twx_radians = hb - ha; // length of twilight in radions
-    let twx = 12.0 * twx_radians / consts::PI; // lenth of twilight in hours
+    let twx = FRAC_HOURS_IN_DAY_2 * twx_radians / consts::PI; // lenth of twilight in hours
 
     // artic winter
-    let riset = 12.0 - 12.0 * ha / consts::PI - longitude / 15.0 + equation / 60.0;
-    let settm = 12.0 + 12.0 * ha / consts::PI - longitude / 15.0 + equation / 60.0;
+    let riset = FRAC_HOURS_IN_DAY_2 - FRAC_HOURS_IN_DAY_2 * ha / consts::PI - longitude / 15.0 + equation;
+    let settm = FRAC_HOURS_IN_DAY_2 + FRAC_HOURS_IN_DAY_2 * ha / consts::PI - longitude / 15.0 + equation;
 
     let twam = riset - twx;
     let twpm = settm + twx;
