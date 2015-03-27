@@ -49,7 +49,7 @@ fn fnrange(x: f64) -> f64 {
 fn calculate_angle(lat: f64, declin: f64, fraction: f64) -> f64 {
     // Correction: different sign as S HS
     let df = if lat.is_negative() {-fraction} else {fraction};
-    let f = (declin + df).tan() * lat.to_radians().tan();
+    let f = (declin + df).tan() * lat.tan();
     f.min(1.0).max(-1.0).asin() + consts::FRAC_PI_2
 }
 
@@ -97,6 +97,7 @@ fn daylight_hours_to_timespec(midnight: Timespec, hours: f64) -> Timespec {
 
 /// Calculate civil twilight (am/pm) and sunrise and sunset at given date
 pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
+    let lat_rad = latitude.to_radians();
     let utc = date.to_utc();
     let d2000 = days_since_2000(utc);
 
@@ -120,8 +121,8 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
         mean_longitude_corr
     };
     let equation = HOURS_IN_DAY * (1.0 - mean_longitude_corr2 / consts::PI_2);
-    let ha = f0(latitude, delta);
-    let hb = f1(latitude, delta);
+    let ha = f0(lat_rad, delta);
+    let hb = f1(lat_rad, delta);
     let twx_radians = hb - ha; // length of twilight in radions
     let twx = FRAC_HOURS_IN_DAY_2 * twx_radians / consts::PI; // lenth of twilight in hours
 
@@ -134,8 +135,8 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let twam = riset - twx;
     let twpm = settm + twx;
 
-    let altmax_nh = consts::FRAC_PI_2 + delta - latitude.to_radians();
-    let altmax = if latitude.to_radians() < delta {
+    let altmax_nh = consts::FRAC_PI_2 + delta - lat_rad;
+    let altmax = if lat_rad < delta {
         consts::PI - altmax_nh
     } else {
             altmax_nh
