@@ -35,6 +35,7 @@ pub struct Daylight {
     pub noon: Timespec,
     pub declination: f64,
     pub daylength: Duration,
+    pub sun_altitude: f64,
 }
 
 /// the function below returns an angle in the range 0 to 2*pi
@@ -114,8 +115,10 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     // Correction suggested by David Smith
     let mean_longitude_corr = mean_longitude - alpha;
     let mean_longitude_corr2 = if mean_longitude_corr < consts::PI {
-        mean_longitude_corr + consts::PI_2} else {
-            mean_longitude_corr};
+        mean_longitude_corr + consts::PI_2
+    } else {
+        mean_longitude_corr
+    };
     let equation = HOURS_IN_DAY * (1.0 - mean_longitude_corr2 / consts::PI_2);
     let ha = f0(latitude, delta);
     let hb = f1(latitude, delta);
@@ -131,6 +134,13 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let twam = riset - twx;
     let twpm = settm + twx;
 
+    let altmax_nh = consts::FRAC_PI_2 + delta - latitude.to_radians();
+    let altmax = if latitude.to_radians() < delta {
+        consts::PI - altmax_nh
+    } else {
+            altmax_nh
+    };
+
     // get midnight reference
     let utcmidnight = Tm {tm_mday: utc.tm_mday, tm_mon: utc.tm_mon, tm_year: utc.tm_year,
                           tm_wday: utc.tm_wday, tm_yday: utc.tm_yday, tm_utcoff: utc.tm_utcoff,
@@ -143,7 +153,8 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
               twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm),
               noon: daylight_hours_to_timespec(tsmidnight, noon),
               declination: delta.to_degrees(),
-              daylength: Duration::seconds((halfday * SECS_IN_HOUR * 2.0) as i64)}
+              daylength: Duration::seconds((halfday * SECS_IN_HOUR * 2.0) as i64),
+              sun_altitude: altmax.to_degrees()}
 }
 
 #[test]
@@ -171,6 +182,8 @@ fn daylight_apeldoorn_20150327_1200_utc() {
     assert_eq!(daylight.daylength.num_seconds(), 45440);
     assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
         "declination != {}", daylight.declination);
+    assert!(daylight.sun_altitude > 40.55 && daylight.sun_altitude < 40.57,
+        "sun_altitude != {}", daylight.sun_altitude);
 }
 
 #[test]
@@ -190,6 +203,8 @@ fn daylight_tokyo_20150327_1200_utc() {
     assert_eq!(daylight.daylength.num_seconds(), 44433);
     assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
         "declination != {}", daylight.declination);
+    assert!(daylight.sun_altitude > 57.35 && daylight.sun_altitude < 57.37,
+        "sun_altitude != {}", daylight.sun_altitude);
 }
 
 #[test]
@@ -209,6 +224,8 @@ fn daylight_avarua_20150327_1200_utc() {
     assert_eq!(daylight.daylength.num_seconds(), 42839);
     assert!(daylight.declination > 2.777311 && daylight.declination < 2.777313,
         "declination != {}", daylight.declination);
+    assert!(daylight.sun_altitude > 66.09 && daylight.sun_altitude < 66.11,
+        "sun_altitude != {}", daylight.sun_altitude);
 }
 
 #[test]
@@ -229,6 +246,8 @@ fn daylight_longyearbyen_20150621_1200_utc_midsummer() {
     assert_eq!(daylight.daylength.num_seconds(), 86400);
     assert!(daylight.declination > 23.436411 && daylight.declination < 23.436413,
         "declination != {}", daylight.declination);
+    assert!(daylight.sun_altitude > 35.20 && daylight.sun_altitude < 35.22,
+        "sun_altitude != {}", daylight.sun_altitude);
 }
 
 #[test]
@@ -249,6 +268,8 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
     assert_eq!(daylight.daylength.num_seconds(), 0);
     assert!(daylight.declination > -23.43652 && daylight.declination < -23.43650,
         "declination != {}", daylight.declination);
+    assert!(daylight.sun_altitude > -11.66 && daylight.sun_altitude < -11.64,
+        "sun_altitude != {}", daylight.sun_altitude);
 }
 
 #[test]
