@@ -34,7 +34,7 @@ pub struct Daylight {
 fn fnrange(x: f64) -> f64 {
     let b = 0.5 * x / consts::PI;
     let a = consts::PI_2 * (b - b.floor());
-    return if a.is_negative() {a + consts::PI_2} else {a}
+    if a.is_negative() {a + consts::PI_2} else {a}
 }
 
 // Commonality between original f0 and f1 function
@@ -42,7 +42,7 @@ fn calculate_angle(lat: f64, declin: f64, fraction: f64) -> f64 {
     // Correction: different sign as S HS
     let df = if lat.is_negative() {-fraction} else {fraction};
     let f = (declin + df).tan() * lat.to_radians().tan();
-    f.min(1.0).asin() + consts::FRAC_PI_2
+    f.min(1.0).max(-1.0).asin() + consts::FRAC_PI_2
 }
 
 /// Calculating the hourangle
@@ -155,4 +155,88 @@ fn daylight_apeldoorn_20150327_1200_utc() {
     assert_eq!(daylight.sunrise.sec, 1427433766); // 2015-03-27T06:22:46+01:00
     assert_eq!(daylight.sunset.sec, 1427479207); // 2015-03-27T19:00:07+01:00
     assert_eq!(daylight.twilight_evening.sec, 1427480844); // 2015-03-27T19:27:24+01:00
+}
+
+#[test]
+fn daylight_tokyo_20150327_1200_utc() {
+    let tm20150327_1200 = Tm {tm_sec: 0, tm_min: 0, tm_hour: 12, tm_mday: 27, tm_mon: 2, tm_year: 115,
+        tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0};
+    let lat_tokyo = 35.41;
+    let long_tokyo = 139.41;
+
+    let daylight = calculate_daylight(tm20150327_1200, lat_tokyo, long_tokyo);
+
+    assert_eq!(daylight.twilight_morning.sec, 1427401349);
+    assert_eq!(daylight.sunrise.sec, 1427402244);
+    assert_eq!(daylight.sunset.sec, 1427446677);
+    assert_eq!(daylight.twilight_evening.sec, 1427447573);
+}
+
+#[test]
+fn daylight_avarua_20150327_1200_utc() {
+    let tm20150327_1200 = Tm {tm_sec: 0, tm_min: 0, tm_hour: 12, tm_mday: 27, tm_mon: 2, tm_year: 115,
+        tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0};
+    let lat_tokyo = -21.12;
+    let long_tokyo = -159.46;
+
+    let daylight = calculate_daylight(tm20150327_1200, lat_tokyo, long_tokyo);
+
+    assert_eq!(daylight.twilight_morning.sec, 1427474290);
+    assert_eq!(daylight.sunrise.sec, 1427474769);
+    assert_eq!(daylight.sunset.sec, 1427517608);
+    assert_eq!(daylight.twilight_evening.sec, 1427518088);
+}
+
+#[test]
+fn daylight_longyearbyen_20150621_1200_utc_midsummer() {
+    let tm20150621_1200 = Tm {tm_sec: 0, tm_min: 0, tm_hour: 12, tm_mday: 21, tm_mon: 5, tm_year: 115,
+        tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0};
+    let lat_tokyo = 78.22;
+    let long_tokyo = 15.65;
+
+    let daylight = calculate_daylight(tm20150621_1200, lat_tokyo, long_tokyo);
+
+    assert_eq!((daylight.sunset - daylight.sunrise).num_minutes(), 23*60 + 59); // midsummer
+    assert_eq!(daylight.twilight_morning.sec, 1434841155);
+    assert_eq!(daylight.sunrise.sec, 1434841155);
+    assert_eq!(daylight.sunset.sec, 1434927554);
+    assert_eq!(daylight.twilight_evening.sec, 1434927554);
+}
+
+#[test]
+fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
+    let tm20151221_1200 = Tm {tm_sec: 0, tm_min: 0, tm_hour: 12, tm_mday: 21, tm_mon: 11, tm_year: 115,
+        tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0};
+    let lat_tokyo = 78.22;
+    let long_tokyo = 15.65;
+
+    let daylight = calculate_daylight(tm20151221_1200, lat_tokyo, long_tokyo);
+
+    assert_eq!((daylight.sunset - daylight.sunrise).num_minutes(), 0); // midwinter
+    assert_eq!(daylight.twilight_morning.sec, 1450695334);
+    assert_eq!(daylight.sunrise.sec, 1450695334);
+    assert_eq!(daylight.sunset.sec, 1450695334);
+    assert_eq!(daylight.twilight_evening.sec, 1450695334);
+}
+
+#[test]
+fn range_check() {
+    for long in -180..181 {
+        for lat in -90..91 {
+            for year in 70..138 { // 138 -> last supported year at 32-bit systems
+                let tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 2, tm_mon: 0, tm_year: year,
+                    tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0
+                    // 2 january; because 1 january may still result in 1969 timestamps
+                };
+
+                let daylight = calculate_daylight(tm, lat as f64, long as f64);
+
+                assert!(daylight.twilight_morning.sec > 0, "daylight={:?} lat={} long={} year={}",
+                    daylight, lat, long, year);
+                assert!(daylight.twilight_morning <= daylight.sunrise);
+                assert!(daylight.sunrise <= daylight.sunset);
+                assert!(daylight.sunset <= daylight.twilight_evening);
+            }
+        }
+    }
 }
