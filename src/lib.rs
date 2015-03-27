@@ -30,7 +30,8 @@ pub struct Daylight {
     pub twilight_morning: Timespec,
     pub sunrise: Timespec,
     pub sunset: Timespec,
-    pub twilight_evening: Timespec
+    pub twilight_evening: Timespec,
+    pub noon: Timespec,
 }
 
 /// the function below returns an angle in the range 0 to 2*pi
@@ -119,8 +120,10 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let twx = FRAC_HOURS_IN_DAY_2 * twx_radians / consts::PI; // lenth of twilight in hours
 
     // artic winter
-    let riset = FRAC_HOURS_IN_DAY_2 - FRAC_HOURS_IN_DAY_2 * ha / consts::PI - longitude / 15.0 + equation;
-    let settm = FRAC_HOURS_IN_DAY_2 + FRAC_HOURS_IN_DAY_2 * ha / consts::PI - longitude / 15.0 + equation;
+    let halfday = FRAC_HOURS_IN_DAY_2 * ha / consts::PI;
+    let riset = FRAC_HOURS_IN_DAY_2 - halfday - longitude / 15.0 + equation;
+    let settm = FRAC_HOURS_IN_DAY_2 + halfday - longitude / 15.0 + equation;
+    let noon = riset + halfday;
 
     let twam = riset - twx;
     let twpm = settm + twx;
@@ -134,7 +137,8 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     Daylight {twilight_morning: daylight_hours_to_timespec(tsmidnight, twam),
               sunrise: daylight_hours_to_timespec(tsmidnight, riset),
               sunset: daylight_hours_to_timespec(tsmidnight, settm),
-              twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm)}
+              twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm),
+              noon: daylight_hours_to_timespec(tsmidnight, noon)}
 }
 
 #[test]
@@ -156,6 +160,7 @@ fn daylight_apeldoorn_20150327_1200_utc() {
 
     assert_eq!(daylight.twilight_morning.sec, 1427432129); // 2015-03-27T05:55:29+01:00
     assert_eq!(daylight.sunrise.sec, 1427433766); // 2015-03-27T06:22:46+01:00
+    assert_eq!(daylight.noon.sec, 1427456487);
     assert_eq!(daylight.sunset.sec, 1427479207); // 2015-03-27T19:00:07+01:00
     assert_eq!(daylight.twilight_evening.sec, 1427480844); // 2015-03-27T19:27:24+01:00
 }
@@ -171,6 +176,7 @@ fn daylight_tokyo_20150327_1200_utc() {
 
     assert_eq!(daylight.twilight_morning.sec, 1427401349);
     assert_eq!(daylight.sunrise.sec, 1427402244);
+    assert_eq!(daylight.noon.sec, 1427424460);
     assert_eq!(daylight.sunset.sec, 1427446677);
     assert_eq!(daylight.twilight_evening.sec, 1427447573);
 }
@@ -186,6 +192,7 @@ fn daylight_avarua_20150327_1200_utc() {
 
     assert_eq!(daylight.twilight_morning.sec, 1427474290);
     assert_eq!(daylight.sunrise.sec, 1427474769);
+    assert_eq!(daylight.noon.sec, 1427496189);
     assert_eq!(daylight.sunset.sec, 1427517608);
     assert_eq!(daylight.twilight_evening.sec, 1427518088);
 }
@@ -202,6 +209,7 @@ fn daylight_longyearbyen_20150621_1200_utc_midsummer() {
     assert_eq!((daylight.sunset - daylight.sunrise).num_minutes(), 23*60 + 59); // midsummer
     assert_eq!(daylight.twilight_morning.sec, 1434841155);
     assert_eq!(daylight.sunrise.sec, 1434841155);
+    assert_eq!(daylight.noon.sec, 1434884354);
     assert_eq!(daylight.sunset.sec, 1434927554);
     assert_eq!(daylight.twilight_evening.sec, 1434927554);
 }
@@ -218,6 +226,7 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
     assert_eq!((daylight.sunset - daylight.sunrise).num_minutes(), 0); // midwinter
     assert_eq!(daylight.twilight_morning.sec, 1450695334);
     assert_eq!(daylight.sunrise.sec, 1450695334);
+    assert_eq!(daylight.noon.sec, 1450695334);
     assert_eq!(daylight.sunset.sec, 1450695334);
     assert_eq!(daylight.twilight_evening.sec, 1450695334);
 }
@@ -237,7 +246,8 @@ fn range_check() {
                 assert!(daylight.twilight_morning.sec > 0, "daylight={:?} lat={} long={} year={}",
                     daylight, lat, long, year);
                 assert!(daylight.twilight_morning <= daylight.sunrise);
-                assert!(daylight.sunrise <= daylight.sunset);
+                assert!(daylight.sunrise <= daylight.noon);
+                assert!(daylight.noon <= daylight.sunset);
                 assert!(daylight.sunset <= daylight.twilight_evening);
             }
         }
