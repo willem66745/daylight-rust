@@ -5,3 +5,7 @@ authors = ["Willem <willem66745@gmail.com>"]
 
 [dependencies]
 time = "*"
+
+[dev-dependencies]
+hyper = "*"
+rustc-serialize = "*"
