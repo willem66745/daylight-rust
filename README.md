@@ -1,3 +1,5 @@
+[![Build Status][status]](https://travis-ci.org/willem66745/daylight-rust)
+
 # daylight-rust
 
 Very simple Rust library to calculate the moment of sunrise, sunset and
