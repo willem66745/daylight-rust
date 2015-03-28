@@ -1,4 +1,4 @@
-[![Build Status][status]](https://travis-ci.org/willem66745/daylight-rust)
+[![Build Status](https://travis-ci.org/willem66745/daylight-rust.svg?branch=master)](https://travis-ci.org/willem66745/daylight-rust)
 
 # daylight-rust
 
