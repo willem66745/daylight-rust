@@ -154,7 +154,7 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let altmax = if lat_rad < delta {
         consts::PI - altmax_nh
     } else {
-            altmax_nh
+        altmax_nh
     };
 
     // get midnight reference
