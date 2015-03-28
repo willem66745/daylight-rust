@@ -1,11 +1,23 @@
-// Based on: http://www.sci.fi/~benefon/rscalc.c
+//! This library calculates moment of sunrise and sunset at a given date,
+//! [latitude](http://en.wikipedia.org/wiki/Latitude) and
+//! [longitude](http://en.wikipedia.org/wiki/Longitude). Also the civil
+//! twilight at am and pm, moment of solar noon, the
+//! [declination](http://en.wikipedia.org/wiki/Declination) of the sun and the
+//! [solar azimuth angle](http://en.wikipedia.org/wiki/Solar_azimuth_angle) is
+//! calculated.
+//!
+//! The original algorithm is written in C is available at
+//! http://www.sci.fi/~benefon/rscalc.c (by Jarmo Lammi).
+//! More recent implementation is available at Github page
+//! https://github.com/jarmol/suncalcs. Parts of the code (variable and
+//! function names) are kept intentionally the same as reference.
+
+// Original text in rscalc.c:
 //
 // C program calculating the sunrise and sunset for
 // the current date and a fixed location(latitude,longitude)
 // Note, twilight calculation gives insufficient accuracy of results
 // Jarmo Lammi 1999 - 2001
-//
-// Kept the function names simular for future reference
 
 #![feature(std_misc)]
 #![feature(core)]
@@ -33,8 +45,11 @@ pub struct Daylight {
     pub sunset: Timespec,
     pub twilight_evening: Timespec,
     pub noon: Timespec,
+    /// Declination of the sun in angle degrees
     pub declination: f64,
+    /// Duration of the day (calculated in seconds)
     pub daylength: Duration,
+    /// Sun altitude in angle degrees
     pub sun_altitude: f64,
 }
 
