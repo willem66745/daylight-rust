@@ -2,7 +2,7 @@
 
 Very simple Rust library to calculate the moment of sunrise, sunset and
 twilight times at a given date, latitude and longitude. The used algorithms to
-calculate the timestamps are based on (http://www.sci.fi/~benefon/rscalc.c).
+calculate the timestamps are based on http://www.sci.fi/~benefon/rscalc.c.
 
 ```rust
 extern crate time;

@@ -21,6 +21,7 @@
 
 #![feature(std_misc)]
 #![feature(core)]
+#![cfg_attr(test, feature(step_by))]
 
 extern crate time;
 
@@ -290,22 +291,25 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
 
 #[test]
 fn range_check() {
-    for long in -180..181 {
-        for lat in -90..91 {
-            for year in 70..138 { // 138 -> last supported year at 32-bit systems
-                let tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 2, tm_mon: 0, tm_year: year,
-                    tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0
-                    // 2 january; because 1 january may still result in 1969 timestamps
-                };
+    for long in (-180..180).step_by(8) {
+        for lat in (-90..91).step_by(8) {
+            for year in (70..138).step_by(2) { // 138 -> last supported year at 32-bit systems
+                for month in 0..12 {
+                    let tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 15, tm_mon: month, tm_year: year,
+                        tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0
+                        // 2 january; because 1 january may still result in 1969 timestamps
+                    };
 
-                let daylight = calculate_daylight(tm, lat as f64, long as f64);
+                    let daylight = calculate_daylight(tm, lat as f64, long as f64);
 
-                assert!(daylight.twilight_morning.sec > 0, "daylight={:?} lat={} long={} year={}",
-                    daylight, lat, long, year);
-                assert!(daylight.twilight_morning <= daylight.sunrise);
-                assert!(daylight.sunrise <= daylight.noon);
-                assert!(daylight.noon <= daylight.sunset);
-                assert!(daylight.sunset <= daylight.twilight_evening);
+                    assert!(daylight.twilight_morning.sec > 0, "daylight={:?} lat={} long={} year={}",
+                        daylight, lat, long, year);
+                    assert!(daylight.twilight_morning <= daylight.sunrise);
+                    assert!(daylight.sunrise <= daylight.noon);
+                    assert!(daylight.noon <= daylight.sunset);
+                    assert!(daylight.sunset <= daylight.twilight_evening);
+                    assert!(daylight.daylength.num_seconds() >= 0);
+                }
             }
         }
     }
