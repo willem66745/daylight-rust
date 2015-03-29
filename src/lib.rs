@@ -25,10 +25,9 @@
 
 extern crate time;
 
-use time::{Timespec, Tm};
+use time::{Timespec, Tm, Duration};
 use std::num::Float;
 use std::f64::consts;
-use std::time::Duration;
 
 const SUNRADIUS: f64 = 0.53;
 const AIRREFR: f64 = 34.0/60.0;
