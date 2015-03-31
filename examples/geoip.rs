@@ -1,4 +1,3 @@
-#![feature(std_misc)]
 extern crate time;
 extern crate daylight;
 extern crate hyper;
