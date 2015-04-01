@@ -19,14 +19,12 @@
 // Note, twilight calculation gives insufficient accuracy of results
 // Jarmo Lammi 1999 - 2001
 
-#![feature(std_misc)]
 #![feature(core)]
 #![cfg_attr(test, feature(step_by))]
 
 extern crate time;
 
 use time::{Timespec, Tm, Duration};
-use std::num::Float;
 use std::f64::consts;
 
 const SUNRADIUS: f64 = 0.53;
@@ -36,6 +34,14 @@ const Y2000: Tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 1, tm_mon: 0, t
 const SECS_IN_HOUR: f64 = 3600.0;
 const HOURS_IN_DAY: f64 = 24.0;
 const FRAC_HOURS_IN_DAY_2: f64 = 12.0;
+
+fn to_radians(target: f64) -> f64 {
+    let value: f64 = consts::PI;
+    target * (value / 180.0)
+}
+
+#[inline]
+fn to_degrees(target: f64) -> f64 { target * (180.0f64 / consts::PI) }
 
 /// Result of the daylight calculation (calculated times are UTC based)
 #[derive(Clone, Copy, Debug)]
@@ -57,40 +63,40 @@ pub struct Daylight {
 fn fnrange(x: f64) -> f64 {
     let b = 0.5 * x / consts::PI;
     let a = consts::PI_2 * (b - b.floor());
-    if a.is_negative() {a + consts::PI_2} else {a}
+    if a.is_sign_negative() {a + consts::PI_2} else {a}
 }
 
 // Commonality between original f0 and f1 function
 fn calculate_angle(lat: f64, declin: f64, fraction: f64) -> f64 {
     // Correction: different sign as S HS
-    let df = if lat.is_negative() {-fraction} else {fraction};
+    let df = if lat.is_sign_negative() {-fraction} else {fraction};
     let f = (declin + df).tan() * lat.tan();
     f.min(1.0).max(-1.0).asin() + consts::FRAC_PI_2
 }
 
 /// Calculating the hourangle
 fn f0(lat: f64, declin: f64) -> f64 {
-    let df0 = (0.5 * SUNRADIUS + AIRREFR).to_radians();
+    let df0 = to_radians(0.5 * SUNRADIUS + AIRREFR);
     calculate_angle(lat, declin, df0)
 }
 
 /// Calculating the hourangle for twilight times
 fn f1(lat: f64, declin: f64) -> f64 {
-    let df1 = 6.0.to_radians();
+    let df1 = to_radians(6.0);
     calculate_angle(lat, declin, df1)
 }
 
 /// Find the ecliptic longitude of the sun
 fn fnsun(d: f64) -> (f64, f64) {
     // mean longitude of the sun
-    let mean_longitude = fnrange(280.461.to_radians() + 0.9856474.to_radians() * d);
+    let mean_longitude = fnrange(to_radians(280.461) + to_radians(0.9856474) * d);
 
     // mean anomaly of the sun
-    let g = fnrange(357.528.to_radians() + 0.9856003.to_radians() * d);
+    let g = fnrange(to_radians(357.528) + to_radians(0.9856003) * d);
 
     // Ecliptic longitude of the sun
-    let ecliptic_longitude = fnrange(mean_longitude + 1.915.to_radians() * g.sin() +
-                                     0.02.to_radians() * (2.0*g).sin());
+    let ecliptic_longitude = fnrange(mean_longitude + to_radians(1.915) * g.sin() +
+                                     to_radians(0.02) * (2.0*g).sin());
 
     (ecliptic_longitude, mean_longitude)
 }
@@ -112,7 +118,7 @@ fn daylight_hours_to_timespec(midnight: Timespec, hours: f64) -> Timespec {
 
 /// Calculate civil twilight (am/pm) and sunrise and sunset at given date
 pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
-    let lat_rad = latitude.to_radians();
+    let lat_rad = to_radians(latitude);
     let utc = date.to_utc();
     let d2000 = days_since_2000(utc);
 
@@ -120,7 +126,7 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     let (ecliptic_longitude, mean_longitude) = fnsun(d2000);
 
     // Obliquity of the ecliptic
-    let obliq = 23.439.to_radians() - 0.0000004.to_radians() * d2000;
+    let obliq = to_radians(23.439) - to_radians(0.0000004) * d2000;
 
     // Find the RA and DEC of the sun
     let alpha = (obliq.cos() * ecliptic_longitude.sin()).atan2(ecliptic_longitude.cos());
@@ -168,9 +174,9 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
               sunset: daylight_hours_to_timespec(tsmidnight, settm),
               twilight_evening: daylight_hours_to_timespec(tsmidnight, twpm),
               noon: daylight_hours_to_timespec(tsmidnight, noon),
-              declination: delta.to_degrees(),
+              declination: to_degrees(delta),
               daylength: Duration::seconds((halfday * SECS_IN_HOUR * 2.0) as i64),
-              sun_altitude: altmax.to_degrees()}
+              sun_altitude: to_degrees(altmax)}
 }
 
 #[test]
