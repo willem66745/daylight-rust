@@ -19,7 +19,6 @@
 // Note, twilight calculation gives insufficient accuracy of results
 // Jarmo Lammi 1999 - 2001
 
-#![feature(core)]
 #![cfg_attr(test, feature(step_by))]
 
 extern crate time;
@@ -62,8 +61,8 @@ pub struct Daylight {
 /// the function below returns an angle in the range 0 to 2*pi
 fn fnrange(x: f64) -> f64 {
     let b = 0.5 * x / consts::PI;
-    let a = consts::PI_2 * (b - b.floor());
-    if a.is_sign_negative() {a + consts::PI_2} else {a}
+    let a = consts::PI * 2.0 * (b - b.floor());
+    if a.is_sign_negative() {a + consts::PI * 2.0} else {a}
 }
 
 // Commonality between original f0 and f1 function
@@ -137,11 +136,11 @@ pub fn calculate_daylight(date: Tm, latitude: f64, longitude: f64) -> Daylight {
     // Correction suggested by David Smith
     let mean_longitude_corr = mean_longitude - alpha;
     let mean_longitude_corr2 = if mean_longitude_corr < consts::PI {
-        mean_longitude_corr + consts::PI_2
+        mean_longitude_corr + consts::PI * 2.0
     } else {
         mean_longitude_corr
     };
-    let equation = HOURS_IN_DAY * (1.0 - mean_longitude_corr2 / consts::PI_2);
+    let equation = HOURS_IN_DAY * (1.0 - mean_longitude_corr2 / (consts::PI * 2.0));
     let ha = f0(lat_rad, delta);
     let hb = f1(lat_rad, delta);
     let twx_radians = hb - ha; // length of twilight in radions
