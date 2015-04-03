@@ -19,8 +19,6 @@
 // Note, twilight calculation gives insufficient accuracy of results
 // Jarmo Lammi 1999 - 2001
 
-#![cfg_attr(test, feature(step_by))]
-
 extern crate time;
 
 use time::{Timespec, Tm, Duration};
@@ -295,9 +293,9 @@ fn daylight_longyearbyen_20151221_1200_utc_midwinter() {
 
 #[test]
 fn range_check() {
-    for long in (-180..180).step_by(8) {
-        for lat in (-90..91).step_by(8) {
-            for year in (70..138).step_by(2) { // 138 -> last supported year at 32-bit systems
+    for long in (-180..180).filter(|x| x % 8 == 0) {
+        for lat in (-90..91).filter(|x| x % 8 == 0) {
+            for year in (70..138).filter(|x| x % 2 == 0) { // 138 -> last supported year at 32-bit systems
                 for month in 0..12 {
                     let tm = Tm {tm_sec: 0, tm_min: 0, tm_hour: 0, tm_mday: 15, tm_mon: month, tm_year: year,
                         tm_wday: 0, tm_yday: 0, tm_isdst: 0, tm_utcoff:0, tm_nsec: 0
