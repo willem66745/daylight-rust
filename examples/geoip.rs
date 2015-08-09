@@ -16,7 +16,7 @@ use rustc_serialize::json::Json;
 
 fn main() {
     // create client
-    let mut client = Client::new();
+    let client = Client::new();
 
     // create request
     let mut res = client.get("http://freegeoip.net/json/")
