@@ -4,8 +4,8 @@ version = "0.0.1"
 authors = ["Willem <willem66745@gmail.com>"]
 
 [dependencies]
-time = "*"
+time = "0.1"
 
 [dev-dependencies]
-hyper = "*"
-rustc-serialize = "*"
+hyper = "0.9"
+rustc-serialize = "0.3"
